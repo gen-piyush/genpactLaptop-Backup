@@ -1,0 +1,23 @@
+Topics to learn in java
+
+1. OOPS concepts (theory and implementation)
+2. Data types
+3. Different types of java memory
+4. Class objects and methods (standard protocol)
+5. Access modifiers 
+6. 9 methods of object class - equals, 
+7. overloading and overriding
+8. constructors
+9. static final and other 52 keywords of java
+10. constructor interface
+11. collections
+12. exceptional habding - try and catch
+13. java basics - java jre, jdk
+14. Threading 
+15. String concept and string methods , string buffer and string builders
+16. ways to create class object and interface 
+
+Spring boot : It is java framework in which all dependencies automatically get installed.
+              
+1. Maven lifecycle
+ 

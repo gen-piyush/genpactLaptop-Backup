@@ -1,0 +1,186 @@
+using IncidentManagementAutoResolver.Data;
+using IncidentManagementAutoResolver.dtos;
+using IncidentManagementAutoResolver.Models;
+using static IncidentManagementAutoResolver.Models.WidgetSlaViolationsMonthly;
+
+namespace IncidentManagementAutoResolver.Services
+{
+	public class WidgetServices
+	{
+
+		private readonly IncidentManagementDbContext dbContext;
+		public WidgetServices(
+			IncidentManagementDbContext dbContext)
+		{
+			this.dbContext = dbContext;
+		}
+		private IncidentResolutionAnalysisResult GetResults(int days)
+		{
+			var todayDate = DateTime.Now;
+
+			DateTime? fromDate = null;
+			fromDate = todayDate.AddDays(-days);
+			Console.WriteLine($"{fromDate}");
+			var data = dbContext.Incidents.
+				Where(t => t.OpenedAt >= fromDate && t.OpenedAt <= todayDate).
+				GroupBy(p => p.State).
+				Select(g => new { State = g.Key, count = g.Count() }).
+				Where(i => i.State.ToLower() != "Resolved");
+			var ndata = data.ToList();
+
+			IncidentResolutionAnalysisResult d = new IncidentResolutionAnalysisResult();
+			var c1 = 0;
+			for (int i = 0; i < ndata.Count; i++)
+			{
+				c1 = c1 + ndata[i].count;
+			}
+			var dataResolved = dbContext.ResolvedIncidents.Where(t => t.Opened_At >= fromDate && t.Opened_At <= todayDate).Count();
+			d.UnResolved = "UnResolved";
+			d.Count = c1;
+			d.Resolved = "Resolved";
+			d.countResolved = dataResolved;
+			Console.WriteLine($"{c1}");
+			Console.WriteLine($"{dataResolved}");
+			return d;
+		}
+
+		public IncidentResolutionAnalysisResult GetIncidentResolutionAnalysisResult(string frequency)
+		{
+			if (frequency.ToLower() == "weekly")
+			{
+				return GetResults(7);
+			}
+			else
+			{
+				return GetResults(30);
+			}
+		}
+
+		public bool GetSlaViolations(IncidentData n)
+		{
+			var result = (n.Priority.Substring(0, 1) == "1" && (DateTime.Now - n.OpenedAt).TotalDays > 1) ||
+						 (n.Priority.Substring(0, 1) == "2" && (DateTime.Now - n.OpenedAt).TotalDays > 2) ||
+						 (n.Priority.Substring(0, 1) == "3" && (DateTime.Now - n.OpenedAt).TotalDays > 3) ||
+						 (n.Priority.Substring(0, 1) == "4" && (DateTime.Now - n.OpenedAt).TotalDays > 4) ||
+						 (n.Priority.Substring(0, 1) == "5" && (DateTime.Now - n.OpenedAt).TotalDays > 5);
+			return result;
+		}
+
+		public WidgetSla GetSlaData()
+        {
+            WidgetSla SlaData = new WidgetSla();
+
+            SlaData.Ticket_volume = dbContext.Incidents.Count();
+            SlaData.TicketAssigned = SlaData.Ticket_volume - dbContext.Incidents.Where(n => n.AssignedTo == string.Empty).Count();
+            SlaData.SlaViolations = dbContext.Incidents.ToList().Count(n => GetSlaViolations(n));
+
+            return SlaData;
+        }
+
+		public WidgetSlaViolationsMonthly GetSlaViolationsMonthlyData()
+        {
+            WidgetSlaViolationsMonthly SlaViolationsMonthlyData = new WidgetSlaViolationsMonthly();
+
+            var Incidents = dbContext.Incidents.ToList();
+
+            Incidents.ForEach(n =>
+            {
+                Months month = (Months)n.OpenedAt.Month;
+                string monthName = Enum.GetName(typeof(Months), month);
+
+                if (!SlaViolationsMonthlyData.MonthlySlaViolationData.ContainsKey(monthName))
+                {
+                    SlaViolationsMonthlyData.MonthlySlaViolationData.Add(monthName, (GetSlaViolations(n) ? 1 : 0));
+
+                }
+                else
+                {
+                    SlaViolationsMonthlyData.MonthlySlaViolationData[monthName] += 1;
+                }
+
+            });
+
+            return SlaViolationsMonthlyData;
+        }
+		
+		public WidgetsResponse GetAllWidgetsCount()
+		{
+			var response = new WidgetsResponse();
+			response.result = true;
+			response.message = "Widgets result";
+			response.data = new List<WidgetsItems>();
+			try
+			{
+				var OpenIncidentsListCount = dbContext.Incidents.Where(g => g.State == "In Progress" || g.State == "New").ToList().Count;
+				int Ticket_volume = dbContext.Incidents.Count();
+				int Reopen_Count = dbContext.Incidents.Where(g => g.Reopen_Count > 0).ToList().Count; ;
+				int SLAViolations = dbContext.Incidents.ToList().Count(n => GetSlaViolations(n));
+				double GetSLAMetCount = Math.Round((1 - ((double)SLAViolations / (double)Ticket_volume)) * 100);
+				var GetIncidentCritcalCount = dbContext.Incidents.Where(p => p.Priority == "1 - Critical").ToList().Count;
+
+				var SLAMetCountItem = new WidgetsItems()
+				{
+					widget_id = 2,
+					widget_name = "SLA Met",
+					widget_data = $"{GetSLAMetCount}  %",
+				};
+				response.data.Add(SLAMetCountItem);
+				var OpenIncidentItem = new WidgetsItems()
+				{
+					widget_id = 1,
+					widget_name = "Open Incidents",
+					widget_data = $"{OpenIncidentsListCount}",
+				};
+				response.data.Add(OpenIncidentItem);
+				var IncidentCriticalItem = new WidgetsItems()
+				{
+					widget_id = 3,
+					widget_name = "Critical Incidents",
+					widget_data = $"{GetIncidentCritcalCount}",
+				};
+				response.data.Add(IncidentCriticalItem);
+				var IncidentReopenCount = new WidgetsItems()
+				{
+					widget_id = 4,
+					widget_name = "Reopened Incidents",
+					widget_data = $"{Reopen_Count}",
+				};
+				response.data.Add(IncidentReopenCount);
+				var IncidentSLABaseline = new WidgetsItems()
+				{
+					widget_id = 4,
+					widget_name = "SLA Baseline",
+					widget_data = $"81%",
+				};
+				response.data.Add(IncidentSLABaseline);
+			}
+			catch (Exception ex)
+			{
+				response.result = false;
+				response.message = ex.Message;
+			}
+			return response;
+		}
+
+        public IncidentLifeCycleResult GetIncidentLifeCycle()
+        {
+
+            var data = dbContext.Incidents.GroupBy(p => p.State).Select(g => new { State = g.Key, count = g.Count() });
+            var ndata = data.ToList();
+            IncidentLifeCycleResult d = new IncidentLifeCycleResult();
+
+            for (int i = 0; i < ndata.Count; i++)
+            {
+                IncidentLifeCycle incidentLifeCycle = new IncidentLifeCycle();
+                incidentLifeCycle.State = ndata[i].State;
+                incidentLifeCycle.count = ndata[i].count;
+                d.Result.Add(incidentLifeCycle);
+
+            }
+
+
+            return d;
+        }
+
+    }
+}

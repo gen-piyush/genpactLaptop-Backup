@@ -1,0 +1,36 @@
+Types of cyber attack:
+
+1. Phishing : Report thislooksphishy@genpact.com 
+2. Vishing : Report such suspicious calls to infosec@genpact.com
+3. Week password attack 
+4. Privacy : 
+	1. Personally identifiable information (PII), makes you you in the digital world.
+	2. In short, PII refers to any info that can be used to identify, contact, or locate a specific individual.
+5. Incident Response​: Knowing which can cause threat and whom to contact if it happens
+	Always remember! 
+	The sooner you report, the better we can respond.
+	Report all security incidents at infosec@genpact.com.
+6. Social Media ​: Be mindful of what u share on social media.
+7. Working remotely : do not 
+			connect with un-secure wifi or 
+			give other frds or family to use laptop
+8. Personal Security​: 
+			Keep an eye out for new risks like deepfakes, Elsagate, Tiktok trends, etc.
+			SafeSearch, parental controls on your router, location tracking, etc
+
+
+Important Links
+
+InfoSec Champions
+	Want to be an Infosec champion and work closely with the team?  Click here to express your interest and we will get back to you regarding the details of the program.
+
+InfoSec Chatbot
+	Have query around Infosec policies or procedures? Don’t worry, our Infosec chatbot is here to give you instant answers.
+
+Policy Central
+	Want to know about the dos and don'ts of Infosec? Click here to read Genpact’s Acceptable usage policy.
+
+InfoSec Channel on Genome
+	Curious to learn more about InfoSec?
+	Visit our InfoSec Channel to know more about security domains.
+	   
